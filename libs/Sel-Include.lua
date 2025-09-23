@@ -592,7 +592,7 @@ end
 -- Non item-based global settings to check on load.
 function global_on_load()
     if world.area then
-        set_dual_wield:schedule(3)
+        set_dual_wield()
 
         if world.area:contains('Abyssea') or data.areas.proc:contains(world.area) then
             state.SkipProcWeapons:set('False')
@@ -1866,7 +1866,13 @@ function get_precast_set(spell, spellMap)
             mote_vars.set_breadcrumbs:append(state.CastingMode.current)
         end
     elseif spell.type == 'WeaponSkill' then
-        equipSet = get_weaponskill_set(equipSet, spell, spellMap)
+        if buffactive['Elvorseal'] and sets.buff.Elvorseal then
+            if sets.buff.Elvorseal.WS then
+                equipSet = set_combine(get_weaponskill_set(equipSet, spell, spellMap), sets.buff.Elvorseal.WS)
+            end
+        else
+            equipSet = get_weaponskill_set(equipSet, spell, spellMap)
+        end
     elseif spell.action_type == 'Ability' then
         if classes.JAMode and equipSet[classes.JAMode] then
             equipSet = equipSet[classes.JAMode]
@@ -2213,7 +2219,7 @@ end
 
 -- Called when the player's subjob changes.
 function sub_job_change(newSubjob, oldSubjob)
-    set_dual_wield:schedule(2)
+    set_dual_wield()
     if user_setup then
         user_setup()
     end
