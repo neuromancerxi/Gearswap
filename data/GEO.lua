@@ -54,6 +54,7 @@ function job_setup()
 
     state.Buff.Entrust = buffactive.Entrust or false
     state.Buff['Blaze of Glory'] = buffactive['Blaze of Glory'] or false
+    state.IdrisMode = M{'Always','300','1000','Never'}
 
     LowTierNukes = S{'Stone', 'Water', 'Aero', 'Fire', 'Blizzard', 'Thunder',
         'Stone II', 'Water II', 'Aero II', 'Fire II', 'Blizzard II', 'Thunder II',
@@ -80,7 +81,7 @@ function job_setup()
     indi_timer = ''
     indi_duration = 180
 
-    init_job_states({"Capacity","AutoRuneMode","AutoTrustMode","AutoNukeMode","AutoWSMode","AutoShadowMode","AutoFoodMode","AutoStunMode","AutoDefenseMode"},{"AutoBuffMode","Weapons","OffenseMode","WeaponskillMode","IdleMode","Passive","RuneElement","RecoverMode","ElementalMode","CastingMode","TreasureMode",})
+    init_job_states({"Capacity","AutoRuneMode","AutoTrustMode","AutoNukeMode","AutoWSMode","AutoShadowMode","AutoFoodMode","AutoStunMode","AutoDefenseMode"},{"AutoBuffMode","Weapons","OffenseMode","WeaponskillMode","IdleMode","Passive","RuneElement","RecoverMode","ElementalMode","CastingMode","IdrisMode","TreasureMode",})
 end
 
 -------------------------------------------------------------------------------------------------------------------
@@ -224,6 +225,17 @@ function job_post_midcast(spell, spellMap, eventArgs)
         end
 
     elseif spell.skill == 'Geomancy' then
+        if state.IdrisMode.value ~= 'Never' and (state.IdrisMode.value == 'Always' or tonumber(state.IdrisMode.value) > player.tp) then
+            if sets.midcast.Geomancy.main and sets.midcast.Geomancy.main ~= player.equipment.main then
+                enable('main')
+                equip({main=sets.midcast.Geomancy.main})
+            end
+            if sets.midcast.Geomancy.sub and sets.midcast.Geomancy.sub ~= player.equipment.sub then
+                enable('sub')
+                equip({sub=sets.midcast.Geomancy.sub})
+            end
+        end
+
         if spell.english:startswith('Geo-') then
             if state.Buff['Blaze of Glory'] and sets.buff['Blaze of Glory'] then
                 equip(sets.buff['Blaze of Glory'])
@@ -257,6 +269,19 @@ end
 
 function job_aftercast(spell, spellMap, eventArgs)
     if not spell.interrupted then
+        if state.IdrisMode.value ~= 'Never' then
+            if sets.midcast.Geomancy.main and sets.weapons[state.Weapons.value] then
+                if sets.weapons[state.Weapons.value].main then
+                    equip({main=sets.weapons[state.Weapons.value].main})
+                    disable('main')
+                end
+                if sets.weapons[state.Weapons.value].sub then
+                    equip({sub=sets.weapons[state.Weapons.value].sub})
+                    disable('sub')
+                end
+            end
+        end
+
         if spell.english:startswith('Indi-') then
             if spell.target.type == 'SELF' then
                 last_indi = string.sub(spell.english,6)
